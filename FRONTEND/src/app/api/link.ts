@@ -10,6 +10,9 @@ export interface LinkCheckResult {
   risk_score: number;
   red_flags: string[];
   analysis: string;
+  ml_prediction?: string;
+  ml_confidence?: number;
+  ml_patterns?: string[];
 }
 
 export async function checkLink(url: string): Promise<LinkCheckResult> {
