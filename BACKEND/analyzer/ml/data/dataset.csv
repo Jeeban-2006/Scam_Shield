@@ -1,0 +1,9 @@
+url,label
+https://google.com,legitimate
+https://amazon.in,legitimate
+http://secure-bank-login.xyz,phishing
+http://verify-account-update.tk,phishing
+http://free-crypto-win.com,investment_scam
+http://loan-approval-fast.net,loan_scam
+https://github.com,legitimate
+http://job-offer-workfromhome.ga,job_scam
