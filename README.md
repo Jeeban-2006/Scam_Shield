@@ -42,6 +42,11 @@ A comprehensive web application that uses advanced Machine Learning and rule-bas
 - **Better Feature Engineering**: TF-IDF character n-grams (3-5) + scaled structural features
 - **Model**: Logistic Regression with balanced class weights
 
+### 🗄️ New Data & Auth Infrastructure
+- **MongoDB Integration**: Dedicated service for storing URL scans, message analysis, and reports
+- **Google Authentication**: Seamless sign-in/sign-up with Google accounts
+- **Secure Environment**: All sensitive keys moved to environment variables
+
 ### 🎨 Dynamic UI Overhaul
 - **AI Classification Section**: Shows ML prediction with confidence meter
 - **Conditional Red Flags**: Only displays when threats are detected
@@ -85,18 +90,22 @@ FRONTEND/
 BACKEND/
 ├── analyzer/
 │   ├── ml/
-│   │   ├── train_model.py      # 🆕 Enhanced ML training
-│   │   ├── predict.py          # 🆕 Prediction with structural features
-│   │   ├── add_noise.py        # 🆕 Data augmentation
-│   │   ├── model.pkl           # 🆕 Trained model (164 KB)
-│   │   ├── vectorizer.pkl      # 🆕 TF-IDF vectorizer (64 KB)
-│   │   ├── scaler.pkl          # 🆕 Feature scaler (2 KB)
-│   │   └── data/
-│   │       └── raw_dataset.csv # Training dataset
+│   │   ├── ...
 │   ├── views.py                # API endpoints
 │   ├── link_validator.py       # 🔧 Updated hybrid validation
-│   ├── utils.py                # Message analysis utilities
-│   └── models.py               # Database models
+│   └── ...
+├── ScamGuardBackend/           # Project settings
+│   └── ...
+├── manage.py                   # Django management script
+└── ...
+```
+
+### Data Service (Node.js + MongoDB)
+```
+MONGO_SERVICE/
+├── index.js                    # Express + MongoDB driver
+├── package.json                # Dependencies
+└── .env                        # Environment configuration
 ```
 
 ---
@@ -179,17 +188,26 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
+# Create .env file with SECRET_KEY and EMAIL credentials
+
 # Run migrations
 python manage.py migrate
 
-# Seed quiz questions (optional)
-python manage.py migrate --run-syncdb
+# Start server (runs on port 7860)
+python manage.py runserver 0.0.0.0:7860
+```
 
-# Train ML model (if needed)
-python analyzer/ml/train_model.py
+### Data Service Setup
+```bash
+cd MONGO_SERVICE
 
-# Start server
-python manage.py runserver
+# Install dependencies
+npm install
+
+# Create .env file with MONGO_URI
+
+# Start service (runs on port 5000)
+node index.js
 ```
 
 ### Frontend Setup
@@ -199,14 +217,17 @@ cd FRONTEND
 # Install dependencies
 npm install
 
+# Create .env file with Firebase keys
+
 # Start development server
 npm run dev
 ```
 
 ### Access the Application
 - **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:8000
-- **Admin Panel**: http://localhost:8000/admin
+- **Backend API**: http://localhost:7860
+- **MongoDB Service**: http://localhost:5000
+- **Admin Panel**: http://localhost:7860/admin
 
 ---
 
@@ -367,18 +388,30 @@ npm test
 
 ### Backend (.env)
 ```env
-SECRET_KEY=your-secret-key
+SECRET_KEY=your-django-secret-key
 DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
+ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+```
+
+### Data Service (.env)
+```env
+MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/?appName=Cluster0
+PORT=5000
 ```
 
 ### Frontend (.env)
 ```env
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=http://localhost:7860
+VITE_MONGO_API_URL=http://localhost:5000/api
+VITE_FIREBASE_API_KEY=your-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-bucket.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+VITE_FIREBASE_APP_ID=your-app-id
+VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
 ```
 
 ---

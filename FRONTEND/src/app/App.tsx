@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Navigation } from '@/app/components/Navigation';
 import { Home } from '@/app/components/Home';
@@ -16,11 +16,24 @@ import { Terms } from '@/app/components/Terms';
 import { Privacy } from '@/app/components/Privacy';
 import { Intro } from '@/app/components/Intro';
 import { Footer } from '@/app/components/Footer';
-import { getStoredAuth } from '@/app/api/auth';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/app/firebase';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  const auth = getStoredAuth();
-  if (!auth) return <Navigate to="/login" replace />;
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) return <div className="min-h-screen bg-[#0a0e27] flex items-center justify-center text-white">Loading...</div>;
+
+  if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
@@ -43,21 +56,21 @@ function AppContent() {
       {!isIntroPage && <Navigation />}
       <main className="flex-1">
         <Routes>
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/signup" element={<SignUpForm />} />
-            <Route path="/recovery" element={<RecoveryForm />} />
-            <Route path="/intro" element={<RequireAuth><Intro /></RequireAuth>} />
-            <Route path="/" element={getStoredAuth() ? <Home /> : <Navigate to="/login" replace />} />
-            <Route path="/home" element={<Navigate to="/" replace />} />
-            <Route path="/message-analyzer" element={<RequireAuth><MessageAnalyzer /></RequireAuth>} />
-            <Route path="/message-result" element={<RequireAuth><MessageResult /></RequireAuth>} />
-            <Route path="/link-checker" element={<RequireAuth><LinkChecker /></RequireAuth>} />
-            <Route path="/link-result" element={<RequireAuth><LinkResult /></RequireAuth>} />
-            <Route path="/report" element={<RequireAuth><ReportScam /></RequireAuth>} />
-            <Route path="/quiz" element={<RequireAuth><AwarenessQuiz /></RequireAuth>} />
-            <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/signup" element={<SignUpForm />} />
+          <Route path="/recovery" element={<RecoveryForm />} />
+          <Route path="/intro" element={<RequireAuth><Intro /></RequireAuth>} />
+          <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
+          <Route path="/home" element={<Navigate to="/" replace />} />
+          <Route path="/message-analyzer" element={<RequireAuth><MessageAnalyzer /></RequireAuth>} />
+          <Route path="/message-result" element={<RequireAuth><MessageResult /></RequireAuth>} />
+          <Route path="/link-checker" element={<RequireAuth><LinkChecker /></RequireAuth>} />
+          <Route path="/link-result" element={<RequireAuth><LinkResult /></RequireAuth>} />
+          <Route path="/report" element={<RequireAuth><ReportScam /></RequireAuth>} />
+          <Route path="/quiz" element={<RequireAuth><AwarenessQuiz /></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
         </Routes>
       </main>
       {!isAuthPage && !isIntroPage && <Footer />}
