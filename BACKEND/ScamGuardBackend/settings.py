@@ -1,8 +1,21 @@
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-scamshield-backend'
+# Load environment variables from .env
+_env_file = BASE_DIR / '.env'
+if _env_file.exists():
+    with open(_env_file, encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, _, value = line.partition('=')
+                key, value = key.strip(), value.strip().strip('"').strip("'")
+                os.environ.setdefault(key, value)
+
+
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-scamshield-backend-fallback')
 
 DEBUG = True
 
@@ -84,19 +97,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Email Configuration - Gmail SMTP
-import os
-from pathlib import Path
 
-_env_file = BASE_DIR / '.env'
-if _env_file.exists():
-    with open(_env_file, encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith('#') and '=' in line:
-                key, _, value = line.partition('=')
-                key, value = key.strip(), value.strip().strip('"').strip("'")
-                os.environ.setdefault(key, value)
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'

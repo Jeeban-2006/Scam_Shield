@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { submitReport, REPORT_SCAM_TYPES, REPORT_PLATFORMS } from '@/app/api/report';
 import { validateScamContent, validateEmailOptional } from '@/app/lib/validation';
 import { getStoredAuth } from '@/app/api/auth';
+import { saveReportToMongo } from '@/app/api/mongo';
 
 export function ReportScam() {
   const [category, setCategory] = useState('');
@@ -53,6 +54,12 @@ export function ReportScam() {
         email: email.trim() || undefined,
       });
       setReportId(data.report_id);
+
+      // Save to MongoDB
+      const auth = getStoredAuth();
+      const username = auth?.user?.username || 'anonymous';
+      saveReportToMongo(category, scamContent, platform, username);
+
       setSubmitted(true);
       setCategory('');
       setPlatform('');
@@ -202,8 +209,8 @@ export function ReportScam() {
           {/* Info Box */}
           <div className="mt-8 p-6 rounded-xl bg-[#00d9ff]/10 border border-[#00d9ff]/20">
             <p className="text-sm text-gray-300 leading-relaxed">
-              <strong className="text-[#00d9ff]">Note:</strong> All reports are reviewed manually by our team. 
-              We take your privacy seriously and will never share your personal information. 
+              <strong className="text-[#00d9ff]">Note:</strong> All reports are reviewed manually by our team.
+              We take your privacy seriously and will never share your personal information.
               By submitting this report, you help protect the entire community from scams.
             </p>
           </div>

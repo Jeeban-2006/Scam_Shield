@@ -7,6 +7,7 @@ import { validateUrl } from '@/app/lib/validation';
 import { checkLink } from '@/app/api/link';
 import { getStoredAuth } from '@/app/api/auth';
 import { getLinkHistory } from '@/app/api/user';
+import { saveUrlToMongo } from '@/app/api/mongo';
 
 function formatRelativeTime(iso: string): string {
   const d = new Date(iso);
@@ -71,6 +72,13 @@ export function LinkChecker() {
     setIsScanning(true);
     try {
       const result = await checkLink(url.trim());
+
+      // Save to MongoDB
+      const auth = getStoredAuth();
+      const username = auth?.user?.username || 'anonymous';
+      // We don't await this to keep UI responsive
+      saveUrlToMongo(url.trim(), result.risk_level, username);
+
       navigate('/link-result', { state: { url: url.trim(), result } });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Scan failed');
