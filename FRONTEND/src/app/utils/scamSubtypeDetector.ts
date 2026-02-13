@@ -183,7 +183,7 @@ function formatMLPrediction(prediction: string): string {
 export async function checkLinkWithEnhancement(url: string): Promise<EnhancedResponse> {
     try {
         // Call backend API
-        const response = await fetch('http://localhost:8000/api/link/check/', {
+        const response = await fetch('http://localhost:7860/api/link/check/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

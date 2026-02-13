@@ -6,6 +6,7 @@ import { AlertCircle, LogIn } from 'lucide-react';
 import { validateMessage } from '@/app/lib/validation';
 import { analyzeMessage as analyzeMessageApi } from '@/app/api/analyze';
 import { getStoredAuth } from '@/app/api/auth';
+import { saveMessageToMongo } from '@/app/api/mongo';
 
 const exampleMessages: { title: string; text: string; tier: 'high' | 'medium' | 'safe'; lang?: 'hindi' | 'odia' }[] = [
   { tier: 'high', title: 'High Risk', text: 'URGENT: Your account will be suspended in 24 hours! Click here immediately to verify your payment details: http://scam-link.xyz/verify' },
@@ -38,6 +39,12 @@ export function MessageAnalyzer() {
     setIsAnalyzing(true);
     try {
       const result = await analyzeMessageApi(message.trim());
+
+      // Save to MongoDB
+      const auth = getStoredAuth();
+      const username = auth?.user?.username || 'anonymous';
+      saveMessageToMongo(message.trim(), result, username);
+
       navigate('/message-result', { state: { message: message.trim(), result } });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Analysis failed. Please try again.');

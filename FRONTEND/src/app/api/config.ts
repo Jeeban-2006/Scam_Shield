@@ -1,4 +1,4 @@
-export const API_BASE = (import.meta.env.VITE_API_URL && String(import.meta.env.VITE_API_URL).trim()) || 'http://localhost:8000';
+export const API_BASE = (import.meta.env.VITE_API_URL && String(import.meta.env.VITE_API_URL).trim()) || 'http://localhost:7860';
 
 export function apiUrl(path: string): string {
   const base = API_BASE.replace(/\/$/, '');

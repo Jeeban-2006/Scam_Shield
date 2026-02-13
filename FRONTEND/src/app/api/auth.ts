@@ -1,7 +1,30 @@
-import { apiUrl } from './config';
+import { auth } from '../firebase';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendPasswordResetEmail,
+  updatePassword as updateFirebasePassword,
+  User,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  GoogleAuthProvider,
+  signInWithPopup
+} from 'firebase/auth';
+
+
+
+export async function loginWithGoogle(): Promise<AuthResponse> {
+  const provider = new GoogleAuthProvider();
+  const userCredential = await signInWithPopup(auth, provider);
+  const token = await userCredential.user.getIdToken();
+  const user = formatUser(userCredential.user);
+
+  return { token, user };
+}
 
 export interface AuthUser {
-  id: number;
+  id: string; // Changed from number to string to accommodate Firebase UID
   username: string;
   email: string;
 }
@@ -13,16 +36,38 @@ export interface AuthResponse {
 
 const AUTH_KEY = 'userCredentials';
 
+// Helper to format Firebase user to our AuthUser
+function formatUser(user: User): AuthUser {
+  return {
+    id: user.uid,
+    username: user.displayName || user.email?.split('@')[0] || 'User',
+    email: user.email || '',
+  };
+}
+
 export function getStoredAuth(): { token: string; user: AuthUser } | null {
-  try {
-    const raw = localStorage.getItem(AUTH_KEY);
-    if (!raw) return null;
-    const data = JSON.parse(raw);
-    if (data?.token && data?.user) return data;
-    return null;
-  } catch {
-    return null;
+  // With Firebase, we rely on the SDK's persistence. 
+  // However, for compatibility with existing synchronous checks, we can check auth.currentUser
+  const user = auth.currentUser;
+  if (!user) {
+    // Fallback to local storage if we set it there manually, or return null
+    try {
+      const raw = localStorage.getItem(AUTH_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (data?.token && data?.user) return data;
+      return null;
+    } catch {
+      return null;
+    }
   }
+
+  // Note: Token refresh is handled by SDK, getting a fresh one here is async.
+  // We return the cached user state.
+  return {
+    token: 'firebase-active', // Token is managed by SDK
+    user: formatUser(user)
+  };
 }
 
 export function setStoredAuth(data: AuthResponse): void {
@@ -32,82 +77,67 @@ export function setStoredAuth(data: AuthResponse): void {
 export function clearStoredAuth(): void {
   localStorage.removeItem(AUTH_KEY);
   localStorage.removeItem('rememberedDevice');
+  auth.signOut();
 }
 
 export async function register(username: string, email: string, password: string): Promise<AuthResponse> {
-  const res = await fetch(apiUrl('/auth/register/'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, email, password }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Registration failed');
-  return data;
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  await updateProfile(userCredential.user, { displayName: username });
+
+  const token = await userCredential.user.getIdToken();
+  const user = formatUser(userCredential.user);
+
+  return { token, user };
 }
 
-export async function login(username: string, password: string): Promise<AuthResponse> {
-  const res = await fetch(apiUrl('/auth/login/'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Login failed');
-  return data;
+export async function login(email: string, password: string): Promise<AuthResponse> {
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  const token = await userCredential.user.getIdToken();
+  const user = formatUser(userCredential.user);
+
+  return { token, user };
 }
 
 export async function me(token: string): Promise<{ user: AuthUser }> {
-  const res = await fetch(apiUrl('/auth/me/'), {
-    headers: { Authorization: `Token ${token}` },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Session invalid');
-  return data;
+  // Verify current user state
+  const user = auth.currentUser;
+  if (!user) throw new Error('Session invalid');
+  return { user: formatUser(user) };
 }
 
 export async function recoveryRequest(email: string): Promise<{ message: string }> {
-  const res = await fetch(apiUrl('/auth/recovery/request/'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Request failed');
-  return data;
+  await sendPasswordResetEmail(auth, email);
+  return { message: 'Password reset email sent' };
 }
 
 export async function recoveryVerify(email: string, code: string, newPassword: string): Promise<{ message: string }> {
-  const res = await fetch(apiUrl('/auth/recovery/verify/'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, code, new_password: newPassword }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Verification failed');
-  return data;
+  // Firebase handles reset via the email link, which opens a page served by Firebase or our app.
+  // Standard Firebase flow doesn't use a manual code entry API like this.
+  // We'll throw an error or implement a workaround if possible, but typically 
+  // you use confirmPasswordReset(auth, code, newPassword).
+  // The 'code' here would come from the URL query param 'oobCode'.
+
+  // Assuming the user is trying to reset password with a code they received:
+  // Note: The UI might need to capture the oobCode from the URL.
+  // If the previous flow was "enter code from email", that's different from Firebase's "click link".
+
+  throw new Error('Please check your email and click the password reset link.');
 }
 
 export async function changePassword(oldPassword: string, newPassword: string): Promise<{ message: string }> {
-  const auth = getStoredAuth();
-  if (!auth?.token) throw new Error('Login required');
-  const url = apiUrl('/auth/change-password/');
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Token ${auth.token}`,
-    },
-    body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
-  });
-  const contentType = res.headers.get('Content-Type') || '';
-  if (!contentType.includes('application/json')) {
-    const text = await res.text();
-    if (text.startsWith('<!') || text.startsWith('<')) {
-      throw new Error('Server returned an error page. Check that the backend is running and VITE_API_URL points to it.');
-    }
-    throw new Error(res.ok ? 'Invalid response from server' : `Request failed (${res.status})`);
+  const user = auth.currentUser;
+  if (!user || !user.email) throw new Error('Login required');
+
+  const credential = EmailAuthProvider.credential(user.email, oldPassword);
+
+  try {
+    await reauthenticateWithCredential(user, credential);
+  } catch (err: any) {
+    if (err.code === 'auth/wrong-password') throw new Error('Incorrect current password');
+    throw err;
   }
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Failed to change password');
-  return data;
+
+  await updateFirebasePassword(user, newPassword);
+  return { message: 'Password updated successfully' };
 }
+
