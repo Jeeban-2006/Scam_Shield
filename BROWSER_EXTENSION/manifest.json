@@ -1,0 +1,20 @@
+{
+    "manifest_version": 3,
+    "name": "ScamShield Analyzer",
+    "version": "1.0",
+    "description": "Analyze messages and links for scams directly from your browser.",
+    "permissions": [
+        "activeTab"
+    ],
+    "host_permissions": [
+        "http://localhost:8000/",
+        "http://127.0.0.1:8000/"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "Analyze Scam"
+    },
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'"
+    }
+}

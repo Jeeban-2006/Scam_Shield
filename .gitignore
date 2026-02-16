@@ -1,0 +1,50 @@
+﻿# General
+.DS_Store
+*.log
+.env
+.env.*
+
+# Python (Backend)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+library.db
+db.sqlite3
+staticfiles/
+
+# Node (Frontend/Mongo Service/Bot)
+node_modules/
+dist/
+build/
+.next/
+out/
+.vercel
+.npm
+package-lock.json (NOT recommended for some, but many ignore it in tutorials, though good for consistency. I'll leave it for now unless needed)
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+
+# Secrets
+auth_debug.txt
+debug_log.txt
+*.pem
+*.key
+firebase-key.json
+*.local
+
+# VS Code
+.vscode/
+.history/
+*.code-workspace

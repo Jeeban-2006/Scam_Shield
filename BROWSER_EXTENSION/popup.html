@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScamShield Analyzer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>ScamShield</h2>
+      <button id="refresh-btn" title="Clear All">↻</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="message">Analyze Message</button>
+      <button class="tab-btn" data-tab="link">Check Link</button>
+    </div>
+
+    <div id="message-tab" class="tab-content active">
+      <textarea id="message-input" placeholder="Paste suspicious message here..." rows="4"></textarea>
+      <button id="analyze-msg-btn" class="action-btn">Analyze Message</button>
+    </div>
+
+    <div id="link-tab" class="tab-content">
+      <input type="text" id="link-input" placeholder="Paste URL here (e.g. http://example.com)">
+      <button id="check-link-btn" class="action-btn">Check Link</button>
+    </div>
+
+    <div id="result-area" class="result-area hidden">
+      <div id="loading" class="hidden">Analyzing...</div>
+      <div id="content" class="hidden">
+        <div class="risk-badge" id="risk-badge">SAFE</div>
+        <div class="score-bar-container">
+            <div class="score-bar" id="score-bar"></div>
+        </div>
+        <p id="risk-score">Score: 0/100</p>
+        <div class="details">
+          <h4>Key Indicators:</h4>
+          <ul id="reasons-list"></ul>
+        </div>
+        <div class="details">
+            <h4>Safety Tips:</h4>
+            <ul id="tips-list"></ul>
+        </div>
+      </div>
+      <div id="error" class="hidden error-msg"></div>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
