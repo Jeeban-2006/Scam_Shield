@@ -17,9 +17,9 @@ if _env_file.exists():
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-scamshield-backend-fallback')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',

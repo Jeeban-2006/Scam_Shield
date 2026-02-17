@@ -10,9 +10,18 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # ---------------------------------------------------
 # 🔹 Load model artifacts
 # ---------------------------------------------------
-model = joblib.load(os.path.join(BASE_DIR, "model.pkl"))
-vectorizer = joblib.load(os.path.join(BASE_DIR, "vectorizer.pkl"))
-scaler = joblib.load(os.path.join(BASE_DIR, "scaler.pkl"))
+model = None
+vectorizer = None
+scaler = None
+
+try:
+    model = joblib.load(os.path.join(BASE_DIR, "model.pkl"))
+    vectorizer = joblib.load(os.path.join(BASE_DIR, "vectorizer.pkl"))
+    scaler = joblib.load(os.path.join(BASE_DIR, "scaler.pkl"))
+    print("✅ Model artifacts loaded successfully.")
+except Exception as e:
+    print(f"⚠️ Failed to load model artifacts: {e}")
+    # Proceed without model (graceful degradation)
 
 
 # ---------------------------------------------------
@@ -63,6 +72,15 @@ def predict_url(url):
     - confidence (%)
     - top_patterns (TF-IDF features only)
     """
+
+    # Check if models are loaded
+    if model is None or vectorizer is None or scaler is None:
+        return {
+            "prediction": "unknown",
+            "confidence": 0.0,
+            "top_patterns": [],
+            "error": "Model artifacts not loaded"
+        }
 
     try:
         # 1️⃣ TF-IDF features
